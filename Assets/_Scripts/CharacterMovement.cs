@@ -48,6 +48,7 @@ public class CharacterMovement : MonoBehaviour {
 		}
 
 		movement.y = _vertSpeed;
+		Debug.Log(_vertSpeed);
 
 		movement *= Time.deltaTime;
 		_charController.Move(movement);
