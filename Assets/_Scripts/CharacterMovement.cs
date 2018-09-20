@@ -27,8 +27,8 @@ public class CharacterMovement : MonoBehaviour {
 
 		Vector2 dirVector = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")).normalized;
 		
-		movement.x = dirVector.x;
-		movement.z = dirVector.y;
+		movement.x = dirVector.x * moveSpeed;
+		movement.z = dirVector.y * moveSpeed;
 		movement = Vector3.ClampMagnitude(movement, moveSpeed);
 
 		bool hitGround = false;
