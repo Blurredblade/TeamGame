@@ -11,16 +11,20 @@ public class PlayerMovement : MonoBehaviour {
 	public float jumpSpeed = 5f;
 	public float minFall = -1.5f;
 	public float terminalVelocity = -10.0f;
+	public float pushForce = 3.0f;
 
 	private CharacterController _controller;
 	private Animator _animator;
 	private float _vertSpeed;
+	private ControllerColliderHit _contact;
+	private bool isGrabbing;
 
 
 	void Start(){
 		_controller = GetComponent<CharacterController>();
 		_animator = GetComponent<Animator>();
 		_vertSpeed = 0;
+		isGrabbing = false;
 	}
 
 	void Update(){
@@ -46,7 +50,6 @@ public class PlayerMovement : MonoBehaviour {
 		if(_vertSpeed < 0 && Physics.Raycast(transform.position, Vector3.down, out hit)){
 			float check = (_controller.height + _controller.radius) / 4.6f;
 			hitGround = hit.distance <= check;
-			Debug.Log(hitGround);
 		}
 
 		if(hitGround){
@@ -66,9 +69,17 @@ public class PlayerMovement : MonoBehaviour {
 			_animator.SetBool("IsJumping", true);
 		}
 		_animator.SetFloat("Speed", movement.sqrMagnitude);
-		Debug.Log(movement.sqrMagnitude);
 		movement.y = _vertSpeed;
 		//_animator.SetFloat("Speed",)
 		_controller.Move(movement * Time.deltaTime);
+	}
+
+	void OnControllerColliderHit(ControllerColliderHit hit){
+		_contact = hit;
+
+		Rigidbody body = hit.collider.attachedRigidbody;
+		if(body != null && !body.isKinematic){
+			body.velocity = hit.moveDirection * pushForce;
+		}
 	}
 }
