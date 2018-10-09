@@ -5,11 +5,14 @@ using UnityEngine;
 public class Door : MonoBehaviour {
 	[SerializeField] private KeyCard keyCard;
 	[SerializeField] private DoorLock doorLock;
+	public Animator[] doorPanels;
 
-	bool Locked;
+	bool isOpen;
+	bool playerNear;
 	// Use this for initialization
 	void Start () {
-		Locked = true;
+		isOpen = false;
+		playerNear = false;
 	}
 	
 	// Update is called once per frame
@@ -18,10 +21,21 @@ public class Door : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider other){
+		if(other.tag == "Player"){
+			doorLock.playerIsNear(true);
+			if(other.gameObject.GetComponent<Player>().hasKeyCard(keyCard)){
+				doorLock.locked(false);
+				doorPanels[0].SetBool("Open", true);
+				doorPanels[1].SetBool("Open", true);
+			}
+		}
+	}
 
-		if(other.tag == "Player" && other.gameObject.GetComponent<Player>().hasKeyCard(keyCard)){
-			Debug.Log("UNLOCKED!");
-			doorLock.locked(false);
+	void OnTriggerExit(Collider other){
+		if(other.tag == "Player"){
+			doorLock.playerIsNear(false);
+			doorPanels[0].SetBool("Open", false);
+			doorPanels[1].SetBool("Open", false);
 		}
 	}
 }
