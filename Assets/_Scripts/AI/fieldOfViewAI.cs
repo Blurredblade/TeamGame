@@ -26,7 +26,7 @@ public class fieldOfViewAI : MonoBehaviour {
 	void Start () {
 		player = GameObject.FindWithTag("Player");
 		_animator = GetComponent<Animator>();
-		StartCoroutine("FindPlayerWithDelay", 0.4f);
+		StartCoroutine("FindPlayerWithDelay", 0.3f);
 		playerSeen = false;
 		spottedVA = spottedViewAngleIncrease + viewAngle;
 		spottedVR = spottedRadiusIncrease + viewRadius;
@@ -46,7 +46,6 @@ public class fieldOfViewAI : MonoBehaviour {
 			viewRadius = spottedVR;
 		}else if(viewRadius == spottedVR && !playerSeen){ 
 			spot.color = Color.white;
-			
 			viewAngle = tempVA;
 			viewRadius = tempVR;
 		}
@@ -77,5 +76,12 @@ public class fieldOfViewAI : MonoBehaviour {
 			yield return new WaitForSeconds(delay);
 			FindPlayer();
 		}
+	}
+
+	void OnCollisionEnter(Collision c){
+		if(c.gameObject == GameObject.FindWithTag("Player")){
+			Debug.Log("Player Hit.");
+		}
+	Debug.Log("I Collided with something!");
 	}
 }
