@@ -13,12 +13,13 @@ public class PlayerMovement : MonoBehaviour {
 	public float terminalVelocity = -10.0f;
 	public float pushForce = 3.0f;
 
+	public float rotSpeed = 15.0f;
+
 	private CharacterController _controller;
 	private Animator _animator;
 	private float _vertSpeed;
 	private ControllerColliderHit _contact;
 	private bool isGrabbing;
-
 
 	void Start(){
 		_controller = GetComponent<CharacterController>();
@@ -29,26 +30,33 @@ public class PlayerMovement : MonoBehaviour {
 
 	void Update(){
 		Vector3 movement = Vector3.zero;
-		Vector2 dir = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-		dir.Normalize();
-		if(Input.GetButton("Run")){
-			movement.x = dir.x * runSpeed;
-			movement.z = dir.y * runSpeed;
-		}else{
-			movement.x = dir.x * walkSpeed;
-			movement.z = dir.y * walkSpeed;
+		float horInput = Input.GetAxis("Horizontal");
+		float vertInput = Input.GetAxis("Vertical");
+		if(horInput != 0 || vertInput != 0){	
+			if(Input.GetButton("Run")){
+				movement.x = horInput * runSpeed;
+				movement.z = vertInput * runSpeed;
+				movement = Vector3.ClampMagnitude(movement, runSpeed);
+			}else{
+				movement.x = horInput * walkSpeed;
+				movement.z = vertInput * walkSpeed;
+				movement = Vector3.ClampMagnitude(movement, walkSpeed);
+			}
+			Quaternion dir = Quaternion.LookRotation(movement);
+			transform.rotation = Quaternion.Lerp(transform.rotation, dir, rotSpeed * Time.deltaTime);
 		}
+
 		if(movement == Vector3.zero){
 			_animator.SetBool("IsIdle", true);
 		}else{
 			_animator.SetBool("IsIdle", false);
 		}
-		transform.forward = (movement != Vector3.zero) ? movement : transform.forward;
+
 		
 		bool hitGround = false;
 		RaycastHit hit;
 		if(_vertSpeed < 0 && Physics.Raycast(transform.position, Vector3.down, out hit)){
-			float check = (_controller.height + _controller.radius) / 4.6f;
+			float check = (_controller.height + _controller.radius) / 1.9f;
 			hitGround = hit.distance <= check;
 		}
 
@@ -60,17 +68,24 @@ public class PlayerMovement : MonoBehaviour {
 				_animator.SetBool("IsJumping", false);
 			}
 		} else {
-			//movement.z *= 0.2f;
-			//movement.x *= 0.2f;
-			_vertSpeed -= Gravity * 3 * Time.deltaTime;
+			_vertSpeed -= Gravity * 5 * Time.deltaTime;
 			if(_vertSpeed < terminalVelocity){
 				_vertSpeed = terminalVelocity;
+			}
+
+			if(_controller.isGrounded){
+				if(Vector3.Dot(movement, _contact.normal) < 0){
+					movement = _contact.normal * walkSpeed;
+				}else{
+					movement += _contact.normal * walkSpeed;
+				}
 			}
 			_animator.SetBool("IsJumping", true);
 		}
 		_animator.SetFloat("Speed", movement.sqrMagnitude);
+
 		movement.y = _vertSpeed;
-		//_animator.SetFloat("Speed",)
+
 		_controller.Move(movement * Time.deltaTime);
 	}
 
@@ -82,4 +97,5 @@ public class PlayerMovement : MonoBehaviour {
 			body.velocity = hit.moveDirection * pushForce;
 		}
 	}
+
 }
