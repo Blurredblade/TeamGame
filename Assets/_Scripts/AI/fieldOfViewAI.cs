@@ -13,11 +13,13 @@ public class fieldOfViewAI : MonoBehaviour {
 	public Light spot;
 	public float spottedViewAngleIncrease;
 	public float spottedRadiusIncrease;
-	public AITarget[] targets;
+	public Transform[] targets;
+	public float deathDistance = 0.5f;
 	private Animator _animator;
 	private GameObject player;
 
 	private bool playerSeen;
+	private int destPoint = 0;
 	private float spottedVA;
 	private float spottedVR;
 	float tempVA;
@@ -32,6 +34,9 @@ public class fieldOfViewAI : MonoBehaviour {
 		spottedVR = spottedRadiusIncrease + viewRadius;
 		tempVA = viewAngle;
 		tempVR = viewRadius;
+		agent.autoBraking = false;
+
+		GotoNextTarget();
 	}
 	
 
@@ -44,12 +49,31 @@ public class fieldOfViewAI : MonoBehaviour {
 			spot.color = Color.red;
 			viewAngle = spottedVA;
 			viewRadius = spottedVR;
+			agent.speed = 4.5f;
 		}else if(viewRadius == spottedVR && !playerSeen){ 
 			spot.color = Color.white;
 			viewAngle = tempVA;
 			viewRadius = tempVR;
+			agent.speed = 3;
 		}
-		
+		if(!agent.pathPending && agent.remainingDistance < 0.5f)
+				GotoNextTarget();
+	}
+
+	void GotoNextTarget(){
+		if(targets.Length == 0)
+			return;
+
+		agent.destination = targets[destPoint].position;
+
+		destPoint = (destPoint + 1) % targets.Length;
+
+	}
+
+	IEnumerator pausePatrol(){
+
+		yield return new WaitForSeconds(0.5f);
+
 	}
 
 	public Vector3 DirFromAngle(float angleInDegrees, bool angleIsGlobal){
@@ -68,7 +92,13 @@ public class fieldOfViewAI : MonoBehaviour {
 			}else{
 				playerSeen = false;
 			}
+			if(disToPlayer <= deathDistance){
+				GameObject.FindWithTag("Player").GetComponent<PlayerMovement>().isDead(true);
+				agent.isStopped = true;
+				_animator.SetBool("Attack", true);
+			}
 		}
+		
 	}
 
 	IEnumerator FindPlayerWithDelay(float delay){
@@ -76,12 +106,5 @@ public class fieldOfViewAI : MonoBehaviour {
 			yield return new WaitForSeconds(delay);
 			FindPlayer();
 		}
-	}
-
-	void OnCollisionEnter(Collision c){
-		if(c.gameObject == GameObject.FindWithTag("Player")){
-			Debug.Log("Player Hit.");
-		}
-	Debug.Log("I Collided with something!");
 	}
 }
